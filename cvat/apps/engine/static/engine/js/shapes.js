@@ -30,8 +30,7 @@ class ShapeModel extends Listener {
         this._merging = false;
         this._active = false;
         this._selected = false;
-        this._activeAAM = false;
-        this._activeAAMAttributeId = null;
+        this._activeAttributeId = null;
         this._merge = false;
         this._hiddenShape = false;
         this._hiddenText = true;
@@ -522,18 +521,14 @@ class ShapeModel extends Listener {
         return this._active;
     }
 
-    set activeAAM(active) {
-        this._activeAAM = active.shape;
-        this._activeAAMAttributeId = active.attribute;
-        this._updateReason = 'activeAAM';
+    set activeAttribute(value) {
+        this._activeAttributeId = value;
+        this._updateReason = 'activeAttribute';
         this.notify();
     }
 
-    get activeAAM() {
-        return {
-            shape: this._activeAAM,
-            attributeId: this._activeAAMAttributeId
-        };
+    get activeAttribute() {
+        return this._activeAttributeId;
     }
 
     set merge(value) {
@@ -2438,7 +2433,10 @@ class ShapeView extends Listener {
         let interpolation = model.interpolate(window.cvat.player.frames.current);
         let hiddenText = model.hiddenText;
         let hiddenShape = model.hiddenShape;
-        let activeAAM = model.activeAAM;
+        let activeAAM = {
+            attributeId: model.activeAttribute,
+            shape: model.activeAttribute === null ? false : true,
+        }
 
         this._makeNotEditable();
         this._deselect();
@@ -2512,7 +2510,7 @@ class ShapeView extends Listener {
             this._uis.attributes[attrId].select();
             break;
         }
-        case 'activeAAM':
+        case 'activeAttribute':
             this._setupAAMView(activeAAM.shape, interpolation.position);
             setupHidden.call(this, hiddenShape, hiddenText, activeAAM, model.active, interpolation);
 
@@ -2862,12 +2860,18 @@ class PolyShapeView extends ShapeView {
                                 this._hideShapeText();
                             }
                             this._uis.shape.addClass('hidden');
+                            if (this._uis.points) {
+                                this._uis.points.addClass('hidden');
+                            }
 
                             // Run edit mode
                             PolyShapeView.editor.edit(this._controller.type.split('_')[1],
                                 this._uis.shape.attr('points'), this._color, index, e,
                                 (points) => {
                                     this._uis.shape.removeClass('hidden');
+                                    if (this._uis.points) {
+                                        this._uis.points.removeClass('hidden');
+                                    }
                                     if (points) {
                                         this._uis.shape.attr('points', points);
                                         this._controller.updatePosition(window.cvat.player.frames.current, this._buildPosition());
@@ -3081,9 +3085,11 @@ class PointsView extends PolyShapeView {
 
     _makeNotEditable() {
         PolyShapeView.prototype._makeNotEditable.call(this);
-        let interpolation = this._controller.interpolate(window.cvat.player.frames.current);
-        if (interpolation.position.points) {
-            this._drawPointMarkers(interpolation.position);
+        if (!this._controller.hiddenShape) {
+            let interpolation = this._controller.interpolate(window.cvat.player.frames.current);
+            if (interpolation.position.points) {
+                this._drawPointMarkers(interpolation.position);
+            }
         }
     }
 

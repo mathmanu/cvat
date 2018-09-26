@@ -99,10 +99,7 @@ class ShapeCollectionModel extends Listener {
         }
 
         if (this._activeAAMShape) {
-            this._activeAAMShape.activeAAM = {
-                shape: false,
-                attribute: null
-            };
+            this._activeAAMShape.activeAttribute = null;
         }
 
         this._currentShapes = [];
@@ -438,10 +435,7 @@ class ShapeCollectionModel extends Listener {
                 this._activeShape = null;
             }
             if (this._activeAAMShape) {
-                this._activeAAMShape.activeAAM = {
-                    shape: false,
-                    attribute: null,
-                };
+                this._activeAAMShape.activeAttribute = null;
             }
             this._frame = frame;
             this._interpolate();
@@ -454,8 +448,8 @@ class ShapeCollectionModel extends Listener {
 
     onShapeUpdate(model) {
         switch (model.updateReason) {
-        case 'activeAAM':
-            if (model.activeAAM.shape) {
+        case 'activeAttribute':
+            if (model.activeAttribute != null) {
                 this._activeAAMShape = model;
             }
             else if (this._activeAAMShape === model) {
