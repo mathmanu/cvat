@@ -1295,22 +1295,18 @@ class ShapeCollectionView {
     static sortByZOrder() {
         if (window.cvat.job.z_order) {
             let content = $('#frameContent');
+
             let shapes = content.find('.shape, .pointTempGroup, .shapeCreation, .aim').toArray().sort(
                 (a,b) => (+a.attributes.z_order.nodeValue - +b.attributes.z_order.nodeValue)
             );
+            let children = content.children().filter((el) => !(el in shapes));
 
             for (let shape of shapes) {
                 content.append(shape);
             }
 
-            let mask = $('#outsideRect');
-            if (mask.length) {
-                mask.appendTo(mask.parent());
-            }
-
-            let texts = content.find('.shapeText');
-            for (let text of texts) {
-                content.append(text);
+            for (let child of children) {
+                content.append(child);
             }
         }
     }
