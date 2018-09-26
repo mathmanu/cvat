@@ -768,7 +768,7 @@ class ShapeCollectionModel extends Listener {
     }
 
     get activeShape() {
-        return this._activeShape;
+        return this._activeAAMShape || this._activeShape;
     }
 
     get currentShapes() {
@@ -891,19 +891,19 @@ class ShapeCollectionController {
     }
 
     switchActiveOccluded() {
-        if (!window.cvat.mode) {
+        if (!window.cvat.mode || window.cvat.mode === 'aam') {
             this._model.switchActiveOccluded();
         }
     }
 
     switchAllLock() {
-        if (!window.cvat.mode) {
+        if (!window.cvat.mode || window.cvat.mode === 'aam') {
             this._model.switchAllLock();
         }
     }
 
     switchActiveLock() {
-        if (!window.cvat.mode) {
+        if (!window.cvat.mode || window.cvat.mode === 'aam') {
             this._model.switchActiveLock();
         }
     }
@@ -1289,6 +1289,11 @@ class ShapeCollectionView {
 
             for (let shape of shapes) {
                 content.append(shape);
+            }
+
+            let mask = $('#outsideRect');
+            if (mask.length) {
+                mask.appendTo(mask.parent());
             }
 
             let texts = content.find('.shapeText');
