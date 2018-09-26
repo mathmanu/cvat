@@ -435,11 +435,6 @@ class ShapeModel extends Listener {
         return frame in this._positions;
     }
 
-    aamAttributeFocus() {
-        this._updateReason = 'attributeFocus';
-        this.notify();
-    }
-
     select() {
         if (!this._selected) {
             this._selected = true;
@@ -2504,12 +2499,6 @@ class ShapeView extends Listener {
             }
             break;
         }
-        case 'attributeFocus': {
-            let attrId = model.activeAAM.attributeId;
-            this._uis.attributes[attrId].focus();
-            this._uis.attributes[attrId].select();
-            break;
-        }
         case 'activeAttribute':
             this._setupAAMView(activeAAM.shape, interpolation.position);
             setupHidden.call(this, hiddenShape, hiddenText, activeAAM, model.active, interpolation);
@@ -2517,6 +2506,15 @@ class ShapeView extends Listener {
             if (activeAAM.shape && this._uis.shape) {
                 this._uis.shape.node.dispatchEvent(new Event('click'));
                 this._highlightAttribute(activeAAM.attributeId);
+
+                let attrInfo = window.cvat.labelsInfo.attrInfo(activeAAM.attributeId);
+                if (attrInfo.type === 'text' || attrInfo.type === 'number') {
+                    this._uis.attributes[activeAAM.attributeId].focus();
+                    this._uis.attributes[activeAAM.attributeId].select();
+                }
+                else {
+                    blurAllElements();
+                }
             }
             else {
                 this._highlightAttribute(null);
