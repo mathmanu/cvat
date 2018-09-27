@@ -506,6 +506,10 @@ class ShapeModel extends Listener {
 
     set active(value) {
         this._active = value;
+        if (!value) {
+            this._activeAttributeId = null;
+        }
+
         if (!this._removed) {
             this._updateReason = 'activation';
             this.notify();
@@ -2099,7 +2103,7 @@ class ShapeView extends Listener {
 
             let stopProp = function(e) {
                 let key = e.keyCode;
-                let serviceKeys = [37, 38, 39, 40, 13, 16, 9, 109];
+                let serviceKeys = [37, 38, 39, 40, 13, 16, 9, 109, 17];
                 if (serviceKeys.includes(key)) {
                     e.preventDefault();
                     return;
@@ -2127,7 +2131,7 @@ class ShapeView extends Listener {
 
             let stopProp = function(e) {
                 let key = e.keyCode;
-                let serviceKeys = [37, 38, 39, 40, 13, 16, 9, 109];
+                let serviceKeys = [37, 38, 39, 40, 13, 16, 9, 109, 17];
                 if (serviceKeys.includes(key)) {
                     e.preventDefault();
                     return;
@@ -2498,27 +2502,6 @@ class ShapeView extends Listener {
             }
             break;
         }
-        case 'activeAttribute':
-            setupHidden.call(this, hiddenShape, hiddenText,
-                activeAttribute != null, activeAttribute, model.active, interpolation);
-
-            if (activeAttribute != null && this._uis.shape) {
-                this._uis.shape.node.dispatchEvent(new Event('click'));
-                this._highlightAttribute(activeAttribute);
-
-                let attrInfo = window.cvat.labelsInfo.attrInfo(activeAttribute);
-                if (attrInfo.type === 'text' || attrInfo.type === 'number') {
-                    this._uis.attributes[activeAttribute].focus();
-                    this._uis.attributes[activeAttribute].select();
-                }
-                else {
-                    blurAllElements();
-                }
-            }
-            else {
-                this._highlightAttribute(null);
-            }
-            break;
         case 'color': {
             this._appearance.colors = model.color;
             this._applyColorSettings();
@@ -2546,13 +2529,32 @@ class ShapeView extends Listener {
 
         if (model.active || activeAttribute != null) {
             this._select();
-            if (activeAttribute === null) {
+            if (window.cvat.mode != 'aam') {
                 this._makeEditable();
             }
         }
 
         if (model.active || !hiddenText) {
             this._showShapeText();
+        }
+
+        if (activeAttribute != null && this._uis.shape) {
+            if (model.updateReason != 'click') {
+                this._uis.shape.node.dispatchEvent(new Event('click'));
+            }
+            this._highlightAttribute(activeAttribute);
+
+            let attrInfo = window.cvat.labelsInfo.attrInfo(activeAttribute);
+            if (attrInfo.type === 'text' || attrInfo.type === 'number') {
+                this._uis.attributes[activeAttribute].focus();
+                this._uis.attributes[activeAttribute].select();
+            }
+            else {
+                blurAllElements();
+            }
+        }
+        else {
+            this._highlightAttribute(null);
         }
 
         function setupHidden(hiddenShape, hiddenText, selectOnly, attributeId, active, interpolation) {
