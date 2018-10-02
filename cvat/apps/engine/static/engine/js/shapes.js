@@ -1411,6 +1411,7 @@ class ShapeView extends Listener {
         };
 
         this._controller = shapeController;
+        this._updateReason = null;
 
         this._shapeContextMenu = $('#shapeContextMenu');
         this._pointContextMenu = $('#pointContextMenu');
@@ -1434,7 +1435,7 @@ class ShapeView extends Listener {
                     this._flags.dragging = true;
                     blurAllElements();
                     this._hideShapeText();
-                    this.notify();
+                    this.notify('drag');
                 }).on('dragend', (e) => {
                     let p1 = e.detail.handler.startPoints.point;
                     let p2 = e.detail.p;
@@ -1446,7 +1447,7 @@ class ShapeView extends Listener {
                     events.drag = null;
                     this._flags.dragging = false;
                     this._showShapeText();
-                    this.notify();
+                    this.notify('drag');
                 });
 
                 // Setup resize events
@@ -1464,7 +1465,7 @@ class ShapeView extends Listener {
                     events.resize = Logger.addContinuedEvent(Logger.EventType.resizeObject);
                     blurAllElements();
                     this._hideShapeText();
-                    this.notify();
+                    this.notify('resize');
                 }).on('resizing', () => {
                     objWasResized = true;
                 }).on('resizedone', () => {
@@ -1477,7 +1478,7 @@ class ShapeView extends Listener {
                     events.resize = null;
                     this._flags.resizing = false;
                     this._showShapeText();
-                    this.notify();
+                    this.notify('resize');
                 });
 
 
@@ -2363,6 +2364,14 @@ class ShapeView extends Listener {
     }
 
 
+    notify(newReason) {
+        let oldReason = this._updateReason;
+        this._updateReason = newReason;
+        Listener.prototype.notify.call(this);
+        this._updateReason = oldReason;
+    }
+
+
     // Inteface methods
     draw(interpolation) {
         let outside = interpolation.position.outside;
@@ -2483,6 +2492,7 @@ class ShapeView extends Listener {
         case 'remove':
             if (model.removed) {
                 this.erase();
+                this.notify('remove');
             }
             break;
         case 'position':
@@ -2504,6 +2514,7 @@ class ShapeView extends Listener {
             if (colorByLabel.prop('checked')) {
                 colorByLabel.trigger('change');
             }
+            this.notify('changelabel');
             break;
         }
         case 'attributeFocus': {
@@ -2671,6 +2682,10 @@ class ShapeView extends Listener {
     // Used by shapeCollectionView for resize management
     get resize() {
         return this._flags.resizing;
+    }
+
+    get updateReason() {
+        return this._updateReason;
     }
 
     // Used in shapeGrouper in order to get model via controller and set group id
